@@ -1,0 +1,380 @@
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --text-color: #2d3436;
+    --bg-color: #f5f6fa;
+    --card-color: #ffffff;
+    --border-color: #dfe6e9;
+    --income-color: #00b894;
+    --expense-color: #d63031;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+.dark-mode {
+    --primary-color: #a29bfe;
+    --secondary-color: #6c5ce7;
+    --text-color: #f5f6fa;
+    --bg-color: #2d3436;
+    --card-color: #1e272e;
+    --border-color: #576574;
+    --income-color: #55efc4;
+    --expense-color: #ff7675;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+    transition: var(--transition);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    animation: fadeIn 0.5s ease;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--card-color);
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.balance-card {
+    background-color: var(--card-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.5s ease;
+}
+
+.balance-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+#balance {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+.income-expense {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--bg-color);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.income, .expense {
+    text-align: center;
+    flex: 1;
+}
+
+.income h4, .expense h4 {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.income p {
+    color: var(--income-color);
+    font-weight: 600;
+}
+
+.expense p {
+    color: var(--expense-color);
+    font-weight: 600;
+}
+
+.history {
+    background-color: var(--card-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.5s ease 0.1s forwards;
+    opacity: 0;
+}
+
+.history h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.transactions {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.transaction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: var(--bg-color);
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
+}
+
+.transaction::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+}
+
+.transaction.income::after {
+    background-color: var(--income-color);
+}
+
+.transaction.expense::after {
+    background-color: var(--expense-color);
+}
+
+.transaction-name {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.transaction-amount {
+    font-weight: 600;
+}
+
+.transaction.income .transaction-amount {
+    color: var(--income-color);
+}
+
+.transaction.expense .transaction-amount {
+    color: var(--expense-color);
+}
+
+.transaction-category {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 3px;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    opacity: 0.7;
+    margin-left: 10px;
+}
+
+.delete-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.add-transaction {
+    background-color: var(--card-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.5s ease 0.2s forwards;
+    opacity: 0;
+}
+
+.add-transaction h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.form-control {
+    margin-bottom: 15px;
+}
+
+.form-control label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-control input,
+.form-control select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.radio-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.btn.secondary {
+    background-color: var(--bg-color);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.btn.secondary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.charts {
+    background-color: var(--card-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    grid-column: span 2;
+    animation: slideUp 0.5s ease 0.3s forwards;
+    opacity: 0;
+}
+
+.charts h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+#chart {
+    margin-bottom: 20px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .charts {
+        grid-column: span 1;
+    }
+}
