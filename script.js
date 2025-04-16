@@ -8,14 +8,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const expenseAmountElement = document.getElementById('expense-amount');
     const exportBtn = document.getElementById('export-btn');
     
+    // Format currency as INR
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2
+        }).format(amount);
+    };
+
     // Chart initialization
     const ctx = document.getElementById('chart').getContext('2d');
     let chart = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: [],
+            labels: ['Food', 'Rent', 'Transport', 'Entertainment', 'Shopping', 'Other'],
             datasets: [{
-                data: [],
+                data: [0, 0, 0, 0, 0, 0], // Initialize with zeros
                 backgroundColor: [
                     '#FF6384',
                     '#36A2EB',
@@ -34,6 +43,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     position: 'right',
                     labels: {
                         color: 'var(--text-color)'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            return `${label}: ${formatCurrency(value)}`;
+                        }
                     }
                 }
             }
@@ -65,17 +83,23 @@ document.addEventListener('DOMContentLoaded', function() {
     transactionForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const text = document.getElementById('text').value;
+        const text = document.getElementById('text').value.trim();
         const amount = +document.getElementById('amount').value;
         const category = document.getElementById('category').value;
         const type = document.querySelector('input[name="type"]:checked').value;
+        
+        if (!text || amount <= 0) {
+            alert('Please enter valid description and amount');
+            return;
+        }
         
         const transaction = {
             id: generateID(),
             text,
             amount,
             category,
-            type
+            type,
+            date: new Date().toISOString()
         };
         
         transactions.push(transaction);
@@ -93,7 +117,9 @@ document.addEventListener('DOMContentLoaded', function() {
     transactionsContainer.addEventListener('click', function(e) {
         if (e.target.classList.contains('delete-btn')) {
             const id = e.target.closest('.transaction').id;
-            deleteTransaction(id);
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                deleteTransaction(id);
+            }
         }
     });
     
@@ -122,19 +148,17 @@ document.addEventListener('DOMContentLoaded', function() {
             transaction.type === 'income' ? transaction.amount : -transaction.amount
         );
         
-        const total = amounts.reduce((acc, item) => acc + item, 0).toFixed(2);
+        const total = amounts.reduce((acc, item) => acc + item, 0);
         const income = amounts
             .filter(item => item > 0)
-            .reduce((acc, item) => acc + item, 0)
-            .toFixed(2);
-        const expense = (amounts
+            .reduce((acc, item) => acc + item, 0);
+        const expense = amounts
             .filter(item => item < 0)
-            .reduce((acc, item) => acc + item, 0) * -1)
-            .toFixed(2);
+            .reduce((acc, item) => acc + item, 0) * -1;
         
-        balanceElement.textContent = `$${total}`;
-        incomeAmountElement.textContent = `$${income}`;
-        expenseAmountElement.textContent = `$${expense}`;
+        balanceElement.textContent = formatCurrency(total);
+        incomeAmountElement.textContent = formatCurrency(income);
+        expenseAmountElement.textContent = formatCurrency(expense);
     }
     
     function updateTransactions() {
@@ -145,20 +169,30 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Sort transactions by date (newest first)
+        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
         transactions.forEach(transaction => {
             const transactionElement = document.createElement('div');
             transactionElement.classList.add('transaction', transaction.type);
             transactionElement.id = transaction.id;
             
+            const date = new Date(transaction.date);
+            const formattedDate = date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            
             transactionElement.innerHTML = `
                 <div class="transaction-name">
                     <span>${transaction.text}</span>
-                    <div class="transaction-category">${transaction.category}</div>
+                    <div class="transaction-category">${transaction.category} • ${formattedDate}</div>
                 </div>
                 <span class="transaction-amount">
-                    ${transaction.type === 'income' ? '+' : '-'}$${Math.abs(transaction.amount).toFixed(2)}
+                    ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(Math.abs(transaction.amount))}
                 </span>
-                <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+                <button class="delete-btn" title="Delete transaction"><i class="fas fa-trash-alt"></i></button>
             `;
             
             transactionsContainer.appendChild(transactionElement);
@@ -166,20 +200,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateChart() {
-        const categories = {};
+        // Initialize all categories with 0
+        const categories = {
+            food: 0,
+            rent: 0,
+            transport: 0,
+            entertainment: 0,
+            shopping: 0,
+            other: 0
+        };
         
+        // Sum expenses by category
         transactions
             .filter(t => t.type === 'expense')
             .forEach(transaction => {
-                if (!categories[transaction.category]) {
-                    categories[transaction.category] = 0;
-                }
                 categories[transaction.category] += transaction.amount;
             });
         
-        const labels = Object.keys(categories);
+        // Convert to arrays for Chart.js
+        const labels = Object.keys(categories).map(category => {
+            // Capitalize first letter
+            return category.charAt(0).toUpperCase() + category.slice(1);
+        });
+        
         const data = Object.values(categories);
         
+        // Update chart data
         chart.data.labels = labels;
         chart.data.datasets[0].data = data;
         chart.update();
@@ -203,14 +249,17 @@ document.addEventListener('DOMContentLoaded', function() {
         let csv = 'Type,Description,Amount,Category,Date\n';
         
         transactions.forEach(transaction => {
-            csv += `${transaction.type},${transaction.text},${transaction.amount},${transaction.category}\n`;
+            const date = new Date(transaction.date);
+            const formattedDate = date.toLocaleDateString('en-IN');
+            
+            csv += `${transaction.type},${transaction.text},${formatCurrency(transaction.amount)},${transaction.category},${formattedDate}\n`;
         });
         
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', 'expense-tracker-export.csv');
+        link.setAttribute('download', `expense-tracker-${new Date().toISOString().slice(0,10)}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
